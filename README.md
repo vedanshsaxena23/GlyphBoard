@@ -88,7 +88,6 @@ npm run app:build
 
 ```
 
-
 3. Fire up **`GlyphBoard_Portable_1.0.0.exe`** right off your hard drive. It will generate its storage footprints dynamically and run smoothly with zero network tracking hoops!
 
 ---
