@@ -1,6 +1,7 @@
 {
   "name": "glyphboard-client",
   "private": true,
+  "author": "Vedansh Saxena",
   "version": "1.0.0",
   "type": "module",
   "main": "main.js",
