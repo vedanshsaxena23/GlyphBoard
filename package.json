@@ -2,6 +2,7 @@
   "name": "glyphboard-client",
   "private": true,
   "author": "Vedansh Saxena",
+  "description": "A high-performance offline code clipboard and snippet workspace manager for developers.",
   "version": "1.0.0",
   "type": "module",
   "main": "main.js",
