@@ -92,3 +92,14 @@ npm run app:build
 3. Fire up **`GlyphBoard_Portable_1.0.0.exe`** right off your hard drive. It will generate its storage footprints dynamically and run smoothly with zero network tracking hoops!
 
 ---
+## 🛡️ License & Sovereign Rights
+
+GlyphBoard is fundamentally built on the principle of absolute privacy and local data sovereignty. 
+
+* **No Tracking, No Accounts, No Catch:** There is no license to purchase, no corporate telemetry tracking your patterns, and no cloud server collecting your private code snippet configurations.
+* **100% Free & Open:** You have full access to run, modify, or bundle the compilation matrix exactly how you see fit. Your snippets belong completely to your hard drive.
+
+---
+
+🔒 **"Your code. Your system. Zero compromises."**  
+Crafted with 💻 by **Vedansh Saxena**.
