@@ -3,7 +3,7 @@
   "private": true,
   "author": "Vedansh Saxena",
   "description": "A high-performance offline code clipboard and snippet workspace manager for developers.",
-  "version": "1.0.0-beta",
+  "version": "1.0.1-beta",
   "type": "module",
   "main": "main.js",
   "scripts": {
