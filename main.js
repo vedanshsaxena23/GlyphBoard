@@ -15,8 +15,8 @@ function createWindow() {
     icon: path.join(__dirname, "public", "logo.png"),
     backgroundColor: '#09090b',
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false,
+      nodeIntegration: false,
+      contextIsolation: true,
     }
   });
   win.removeMenu();
