@@ -4,7 +4,7 @@
   <table border="0" style="border-collapse: collapse; border: none;">
     <tr style="border: none;">
       <td align="center" valign="middle" style="border: none; padding-right: 15px;">
-        <img src="public/new logo.png" alt="Project Logo" width="150" height="105">
+        <img src="public/new logo.png" alt="Project Logo" width="89.71px" height="90px">
       </td>
       <td align="left" valign="middle" style="border: none;">
         <h1 style="border-bottom: none; margin: 0; padding: 0;"><strong>GlyphBoard</strong></h1>
