@@ -18,85 +18,77 @@ export function openDB() {
   });
 }
 
-// 1. CREATE: Add a fresh clipboard record row
+// Helper to safely close DB connections
+function closeDB(db) {
+  if (db) db.close();
+}
+
+// CREATE
 export async function addClip(content = "", language = "plaintext", title = "Untitled Snippet") {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORE_NAME, "readwrite");
-    const store = transaction.objectStore(STORE_NAME);
-    
-    const request = store.add({
-      title,
-      language,
-      content,
-      timestamp: Date.now()
-    });
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    const store = tx.objectStore(STORE_NAME);
+    const req = store.add({ title, language, content, timestamp: Date.now() });
 
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
+    tx.oncomplete = () => { closeDB(db); resolve(req.result); };
+    tx.onerror = () => { closeDB(db); reject(tx.error); };
   });
 }
 
-// 2. READ: Fetch all items from storage sorted by timestamp (newest first)
+// READ
 export async function getAllClips() {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORE_NAME, "readonly");
-    const store = transaction.objectStore(STORE_NAME);
-    const request = store.getAll();
+    const tx = db.transaction(STORE_NAME, "readonly");
+    const store = tx.objectStore(STORE_NAME);
+    const req = store.getAll();
 
-    request.onsuccess = () => {
-      const sorted = request.result.sort((a, b) => b.timestamp - a.timestamp);
-      resolve(sorted);
+    tx.oncomplete = () => {
+      closeDB(db);
+      resolve(req.result.sort((a, b) => b.timestamp - a.timestamp));
     };
-    request.onerror = () => reject(request.error);
+    tx.onerror = () => { closeDB(db); reject(tx.error); };
   });
 }
 
-// 3. UPDATE: Explicitly modify an existing snippet record (Crucial for your Autosave loop!)
+// UPDATE
 export async function updateClip(updatedRecord) {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORE_NAME, "readwrite");
-    const store = transaction.objectStore(STORE_NAME);
-    
-    // Ensure ID is passed as a pure number to guarantee strict key index alignment
-    if (updatedRecord.id) {
-      updatedRecord.id = Number(updatedRecord.id);
-    }
-    
-    const request = store.put(updatedRecord);
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    const store = tx.objectStore(STORE_NAME);
+    updatedRecord.id = Number(updatedRecord.id);
+    const req = store.put(updatedRecord);
 
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
+    tx.oncomplete = () => { closeDB(db); resolve(req.result); };
+    tx.onerror = () => { closeDB(db); reject(tx.error); };
   });
 }
 
-// 4. DELETE: Drop a target row using its ID key
+// DELETE
 export async function deleteClip(id) {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORE_NAME, "readwrite");
-    const store = transaction.objectStore(STORE_NAME);
-    
-    // Defensive normalization against accidental string mutations
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    const store = tx.objectStore(STORE_NAME);
     const targetId = typeof id === "object" ? id.id : Number(id);
-    const request = store.delete(targetId);
+    const req = store.delete(targetId);
 
-    request.onsuccess = () => resolve(true);
-    request.onerror = () => reject(request.error);
+    tx.oncomplete = () => { closeDB(db); resolve(true); };
+    tx.onerror = () => { closeDB(db); reject(tx.error); };
   });
 }
 
-// 5. PURGE: Completely clear out the object store data blocks without altering schemas
+// PURGE
 export async function clearAllClips() {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORE_NAME, "readwrite");
-    const store = transaction.objectStore(STORE_NAME);
-    const request = store.clear();
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    const store = tx.objectStore(STORE_NAME);
+    const req = store.clear();
 
-    request.onsuccess = () => resolve(true);
-    request.onerror = () => reject(request.error);
+    tx.oncomplete = () => { closeDB(db); resolve(true); };
+    tx.onerror = () => { closeDB(db); reject(tx.error); };
   });
 }

@@ -1,4 +1,34 @@
-# 📋 GlyphBoard
+<!-- # 📋 GlyphBoard -->
+
+<div align="center">
+  <table border="0" style="border-collapse: collapse; border: none;">
+    <tr style="border: none;">
+      <td align="center" valign="middle" style="border: none; padding-right: 15px;">
+        <img src="public/new logo.png" alt="Project Logo" width="150" height="105">
+      </td>
+      <td align="left" valign="middle" style="border: none;">
+        <h1 style="border-bottom: none; margin: 0; padding: 0;"><strong>GlyphBoard</strong></h1>
+        <p style="margin: 4px 0 0 0;"><em>A sleek, modern, and high-performance solution built for the future.</em></p>
+      </td>
+    </tr>
+  </table>
+
+  <br />
+
+  <a href="https://github.com/vedanshsaxena23">
+    <img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Profile" />
+  </a>
+  <a href="https://www.linkedin.com/in/hey-its-vedansh-saxena">
+    <img src="https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn Profile" />
+  </a>
+  <a href="https://www.instagram.com/_vedansh.saxena_">
+    <img src="https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white" alt="Instagram Profile" />
+  </a>
+  <a href="/LICENSE.md">
+  <img src="https://img.shields.io/badge/License-GPLv3-00599C?style=for-the-badge&logo=gnu&logoColor=white" alt="GPLv3 License" />
+</a>
+</div>
+
 
 GlyphBoard is a clean, modern, high-performance offline code clipboard and snippet workspace manager tailored specifically for developers. Built on a fully decentralized architectural design, the application runs entirely locally on your hardware with zero external server dependencies, guaranteeing ironclad privacy and instantaneous data load workflows.
 
@@ -25,6 +55,8 @@ GLYPHBOARD/
 ├── node_modules/          # Local workspace runtime package dependencies
 ├── public/                # Static application assets (Logo images, etc.)
 ├── release/               # Standalone distributed binary destination directory
+├── splash/                # Splash screen
+│   ├── components/        # Core UI of splash screen
 ├── src/                   # Active React functional components & views
 │   ├── assets/            # CSS layouts and custom web typography stylesheets
 │   ├── Components/        # Core UI views (Sidebar, MainView, Settings panels)
@@ -97,6 +129,17 @@ GlyphBoard is fundamentally built on the principle of absolute privacy and local
 
 * **No Tracking, No Accounts, No Catch:** There is no license to purchase, no corporate telemetry tracking your patterns, and no cloud server collecting your private code snippet configurations.
 * **100% Free & Open:** You have full access to run, modify, or bundle the compilation matrix exactly how you see fit. Your snippets belong completely to your hard drive.
+
+---
+---
+
+## 📜 License & Sovereign Rights
+
+GlyphBoard is fundamentally built on the principle of absolute privacy, local data sovereignty, and open-source freedom. 
+
+* **License:** This project is licensed under the **GNU General Public License v3.0** — see the [LICENSE](LICENSE.md) file for complete details.
+* **100% Free & Copyleft:** You have full access to run, study, modify, and distribute this software. Any derivative works must also be open-sourced under the same GPLv3 terms.
+* **No Telemetry, No Accounts:** Your code snippet configurations and clipboard data remain entirely on your local machine.
 
 ---
 

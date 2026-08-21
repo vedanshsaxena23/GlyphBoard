@@ -1,15 +1,23 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { resolve } from 'path'
 
-// https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react({compiler: true})],
   base: './',
   optimizeDeps: {
-    // Force Vite to pre-bundle the monaco editor dependencies locally
     include: [
-      `@monaco-editor/react`,
-      `monaco-editor/esm/vs/editor/editor.worker`
+      '@monaco-editor/react',
+      'monaco-editor/esm/vs/editor/editor.worker'
     ],
   },
+  build: {
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'),     
+        splash: resolve(__dirname, 'splash/index.html')
+      }
+    },
+    outDir: 'dist'
+  }
 })
