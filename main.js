@@ -28,7 +28,7 @@ function createMainWindow() {
     width: 1200,
     height: 800,
     title: "GlyphBoard",
-    icon: path.join(__dirname, "public", "new logo.ico"),
+    icon: path.join(__dirname, "public", "new-logo.ico"),
     backgroundColor: '#09090b',
     show: false,
     webPreferences: {

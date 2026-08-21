@@ -4,7 +4,7 @@
   <table border="0" style="border-collapse: collapse; border: none;">
     <tr style="border: none;">
       <td align="center" valign="middle" style="border: none; padding-right: 15px;">
-        <img src="public/new logo.png" alt="Project Logo" width="89.71px" height="90px">
+        <img src="public/new-logo.png" alt="Project Logo" width="89.71px" height="90px">
       </td>
       <td align="left" valign="middle" style="border: none;">
         <h1 style="border-bottom: none; margin: 0; padding: 0;"><strong>GlyphBoard</strong></h1>
@@ -28,12 +28,29 @@
   <img src="https://img.shields.io/badge/License-GPLv3-00599C?style=for-the-badge&logo=gnu&logoColor=white" alt="GPLv3 License" />
 </a>
 </div>
-
+<br/>
 
 GlyphBoard is a clean, modern, high-performance offline code clipboard and snippet workspace manager tailored specifically for developers. Built on a fully decentralized architectural design, the application runs entirely locally on your hardware with zero external server dependencies, guaranteeing ironclad privacy and instantaneous data load workflows.
 
 ---
+## 🧑‍💻Glyphboard Demo 
+<div align="center">
+  <img 
+    src="assets\demo.gif" 
+    alt="Project Demo" 
+    style="
+      width: 100%; 
+      max-width: 850px; 
+      height: auto; 
+      border-radius: 12px; 
+      border: 1px solid #30363d; 
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 16px rgba(88, 166, 255, 0.15); 
+      display: block;
+    " 
+  />
+</div>
 
+---
 ## ✨ Key Features
 
 * **Fully Offline Setup:** Zero backend infrastructure tracks or endpoints. The codebase resolves internal logic entirely out of the local client wrapper.
@@ -41,7 +58,7 @@ GlyphBoard is a clean, modern, high-performance offline code clipboard and snipp
 * **Persistent Local Vault:** Uses Chromium's native IndexedDB framework to execute robust asynchronous data tracking across snippet spaces without performance lag.
 * **Auto-Save Architecture:** In-flight code modifications debouncing loop records updates seamlessly directly to the database layer on every input stroke.
 * **Zero-Complication Copy Pipelines:** Modern hardware clipboard synchronization engine pairs with intuitive temporary status notifications when tracking blocks.
-* **Standalone Portable Binary:** Packaged down tightly into a single lightweight execution framework running out of standard file protocols seamlessly.
+* **Flexible Deployment Options:** Available as either a lightweight, standalone portable binary or a simple installer for seamless setup across standard environment protocols.
 
 ---
 
@@ -79,23 +96,20 @@ Ensure you have [Node.js](https://nodejs.org/) setup on your machine.
 
 1. **Clone the repository space and navigate inside:**
 ```bash
-git clone [https://github.com/your-username/glyphboard.git](https://github.com/your-username/glyphboard.git)
+git clone https://github.com/your-username/glyphboard.git
 cd glyphboard
-
 ```
 
 
 2. **Install all production node packages:**
 ```bash
 npm install
-
 ```
 
 
 3. **Launch the app in the local hot-reloaded development tracking state:**
 ```bash
 npm run dev
-
 ```
 
 

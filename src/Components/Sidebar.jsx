@@ -15,7 +15,7 @@ export default function Sidebar() {
         
         {/* App Identity Header */}
         <div className="flex items-center gap-3.5 px-2" onClick={() => navigate('/')}>
-          <img src="./new logo.png" alt="GlyphBoard Logo" className="w-12 h-15 rounded-xl object-contain cursor-pointer" />
+          <img src="./new-logo.png" alt="GlyphBoard Logo" className="w-12 h-15 rounded-xl object-contain cursor-pointer" />
           <span className="text-3xl tracking-tight text-zinc-100 select-none font-normal cursor-pointer" style={{ fontFamily: "Bitcount Prop Single" }}>
             GlyphBoard
           </span>

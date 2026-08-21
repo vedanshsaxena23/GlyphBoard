@@ -1,5 +1,5 @@
 {
-  "name": "glyphboard-client",
+  "name": "glyphboard",
   "private": true,
   "author": "Vedansh Saxena",
   "license": "GPL-3.0-or-only",
@@ -58,11 +58,10 @@
         "portable",
         "nsis"
       ],
-      "icon": "public/logo.png"
+      "icon": "public/new-logo.ico"
     },
     "portable": {
-      "artifactName": "${productName}_Portable_${version}.${ext}",
-      "splashImage": "public/logo.png"
+      "artifactName": "${productName}_Portable_${version}.${ext}"
     },
     "nsis": {
       "oneClick": false,
