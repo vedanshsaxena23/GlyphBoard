@@ -1,12 +1,27 @@
 import React, { useContext } from "react";
-import { User } from "../../App.jsx";
+import { User } from "../../context/UserContext";
 
 export default function SettingsPanel() {
   const user = useContext(User);
 
+  const isSqlite = user?.storageEngine === "sqlite";
+
+  const dbConfig = isSqlite
+    ? {
+        label: "Encrypted SQLite Engine",
+        detail: "Hardware-bound AES-GCM",
+        badge: "Encrypted Node",
+        badgeStyle: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+      }
+    : {
+        label: "IndexedDB Engine Layer",
+        detail: "Standard browser storage",
+        badge: "Active Node",
+        badgeStyle: "bg-[#5B44C7]/10 text-[#7a65e8] border-[#5B44C7]/20",
+      };
+
   return (
     <div className="w-full h-full flex flex-col font-sans text-zinc-200 select-none p-6 overflow-y-auto">
-      
       {/* Welcome Banner Module */}
       <div className="border-b border-zinc-800/60 pb-6 mb-6">
         <h2 className="text-xl font-semibold text-zinc-100 tracking-tight">
@@ -30,7 +45,6 @@ export default function SettingsPanel() {
 
         {/* Info Grid */}
         <div className="flex flex-col gap-4">
-          
           {/* Developer Field */}
           <div className="flex flex-col gap-1.5">
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wide">
@@ -51,22 +65,25 @@ export default function SettingsPanel() {
             </div>
           </div>
 
-          {/* Core Engine Meta Indicator */}
+          {/* Dynamic Storage Engine Indicator */}
           <div className="flex flex-col gap-1.5">
             <label className="text-[10px] font-bold text-zinc-500 tracking-wide uppercase">
               Storage Sub-system
             </label>
-            <div className="w-full px-4 py-3 bg-zinc-950/40 border border-zinc-800/80 rounded-xl text-xs text-zinc-400 font-mono flex items-center justify-between">
-              <span>IndexedDB Engine Layer</span>
-              <span className="text-[10px] bg-[#5B44C7]/10 text-[#7a65e8] px-2 py-0.5 rounded border border-[#5B44C7]/20 font-sans font-medium">
-                Active Node
+            <div className="w-full px-4 py-3 bg-zinc-950/40 border border-zinc-800/80 rounded-xl text-xs text-zinc-300 font-mono flex items-center justify-between">
+              <div className="flex flex-col gap-0.5">
+                <span className="text-zinc-200 font-medium">{dbConfig.label}</span>
+                <span className="text-[11px] text-zinc-500 font-sans">{dbConfig.detail}</span>
+              </div>
+              <span
+                className={`text-[10px] px-2.5 py-1 rounded border font-sans font-medium tracking-wide uppercase ${dbConfig.badgeStyle}`}
+              >
+                {dbConfig.badge}
               </span>
             </div>
           </div>
-
         </div>
       </div>
-
     </div>
   );
 }

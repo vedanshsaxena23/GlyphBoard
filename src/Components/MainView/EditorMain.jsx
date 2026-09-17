@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Editor from "@monaco-editor/react";
 import { useOutletContext } from "react-router-dom";
-import { updateClip } from "../../utilities/db.js";
+import { updateClip } from "../../utilities/db.mjs";
 
 export default function EditorMain() {
   const { activeClip, refreshClips } = useOutletContext();

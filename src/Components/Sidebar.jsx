@@ -1,6 +1,6 @@
 import "@fontsource/bitcount-prop-single/index.css";
 import { useContext } from 'react';
-import { User } from "../App";
+import { User } from "../context/UserContext";
 import { useNavigate } from "react-router-dom";
 
 export default function Sidebar() {

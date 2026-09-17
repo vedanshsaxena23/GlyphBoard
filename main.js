@@ -1,6 +1,7 @@
 // glyphboard-client/main.js
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, ipcMain, safeStorage } from 'electron';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -8,6 +9,49 @@ const __dirname = path.dirname(__filename);
 
 let splash;
 let mainWin;
+let vaultPath;
+
+// --- IPC Handlers for OS SafeStorage ---
+
+ipcMain.handle('save-vault-credentials', async (event, payload) => {
+  if (!vaultPath) vaultPath = path.join(app.getPath('userData'), 'vault.bin');
+
+  if (!payload) {
+    if (fs.existsSync(vaultPath)) fs.unlinkSync(vaultPath);
+    return true;
+  }
+
+  if (!safeStorage.isEncryptionAvailable()) {
+    console.error("OS safeStorage encryption is not available.");
+    return false;
+  }
+
+  const userDataDir = path.dirname(vaultPath);
+  if (!fs.existsSync(userDataDir)) {
+    fs.mkdirSync(userDataDir, { recursive: true });
+  }
+
+  const plainText = JSON.stringify(payload);
+  const encryptedBuffer = safeStorage.encryptString(plainText);
+  fs.writeFileSync(vaultPath, encryptedBuffer);
+  return true;
+});
+
+ipcMain.handle('load-vault-credentials', async () => {
+  if (!vaultPath) vaultPath = path.join(app.getPath('userData'), 'vault.bin');
+  if (!fs.existsSync(vaultPath)) return null;
+
+  try {
+    const encryptedBuffer = fs.readFileSync(vaultPath);
+    const decryptedText = safeStorage.decryptString(encryptedBuffer);
+    return JSON.parse(decryptedText);
+  } catch (err) {
+    console.error("Failed to decrypt OS vault:", err);
+    return null;
+  }
+});
+
+// --- Window Creators ---
 
 function createSplash() {
   splash = new BrowserWindow({
@@ -18,12 +62,15 @@ function createSplash() {
     transparent: false,
     alwaysOnTop: false,
     backgroundColor: '#09090b', 
-  })
+  });
 
-  splash.loadFile(path.join(__dirname, "dist", "splash", "index.html"))
+  splash.loadFile(path.join(__dirname, "dist", "splash", "index.html"));
 }
 
 function createMainWindow() {
+  // Preload script path: adjust if your preload is located elsewhere (e.g. utilities/preload.cjs)
+  const preloadPath = path.join(__dirname, "src", "utilities", "preload.cjs");
+
   mainWin = new BrowserWindow({
     width: 1200,
     height: 800,
@@ -32,24 +79,20 @@ function createMainWindow() {
     backgroundColor: '#09090b',
     show: false,
     webPreferences: {
+      preload: preloadPath, // 👈 REQUIRED: Injects window.electron into React
       nodeIntegration: false,
       contextIsolation: true,
     }
   });
-  mainWin.removeMenu();
 
   if (process.env.VITE_DEV_SERVER_URL) {
-    // Dev mode
     mainWin.loadURL(`${process.env.VITE_DEV_SERVER_URL}/index.html`);
   } else {
-    // Production mode
     mainWin.loadFile(path.join(__dirname, 'dist', 'index.html'));
   }
 
   mainWin.once('ready-to-show', () => {
     if (process.env.VITE_DEV_SERVER_URL) {
-      // For testing splash screen only
-      // Added delay of 6 seconds 
       setTimeout(() => {
         if (splash) splash.close();
         mainWin.show();
@@ -59,10 +102,13 @@ function createMainWindow() {
       mainWin.show();
     }
   });
-
 }
 
+// --- App Lifecycle ---
+
 app.whenReady().then(() => {
+  Menu.setApplicationMenu(null);
+  vaultPath = path.join(app.getPath('userData'), 'vault.bin');
   createSplash();
   createMainWindow();
 });

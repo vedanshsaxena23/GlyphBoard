@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
-import { addClip } from "../../utilities/db.js"; 
+import { addClip } from "../../utilities/db.mjs"; 
 
 export default function NewSnippetView() {
   const navigate = useNavigate();
@@ -46,7 +46,7 @@ export default function NewSnippetView() {
       );
 
       if (description.trim()) {
-        const { openDB } = await import("../../utilities/db.js");
+        const { openDB } = await import("../../utilities/db.mjs");
         const db = await openDB();
         const transaction = db.transaction("clips", "readwrite");
         const store = transaction.objectStore("clips");

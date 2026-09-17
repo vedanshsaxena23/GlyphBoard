@@ -2,8 +2,8 @@ import { useContext, useState, useEffect } from "react";
 import FilterAccordion from "./MainView/FilterAccordion";
 import SnippetCard from "./MainView/Snippet";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { User } from "../App.jsx";
-import { getAllClips, deleteClip } from "../utilities/db.js"; 
+import { User } from "../context/UserContext";
+import { getAllClips, deleteClip } from "../utilities/db.mjs"; 
 
 export default function MainView() {
   const user = useContext(User);

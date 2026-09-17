@@ -17,6 +17,7 @@ dist-ssr
 !.vscode/extensions.json
 .idea
 .DS_Store
+.continue
 *.suo
 *.ntvs*
 *.njsproj
@@ -66,6 +67,7 @@ pnpm-debug.log*
 
 # Local Session Environment Context Variable Files
 .env
+.env.development
 .env.local
 .env.development.local
 .env.test.local

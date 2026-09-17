@@ -21,8 +21,11 @@
     "@monaco-editor/react": "^4.7.0",
     "@tailwindcss/postcss": "^4.3.2",
     "axios": "^1.18.1",
+    "bcryptjs": "^3.0.3",
     "motion": "^12.42.2",
+    "otpauth": "^9.5.2",
     "postcss": "^8.5.17",
+    "qrcode": "^1.5.4",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-router-dom": "^7.18.1",
@@ -69,7 +72,8 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "GlyphBoard",
-      "artifactName": "${productName}_Setup_${version}.${ext}"
+      "artifactName": "${productName}_Setup_${version}.${ext}",
+      "include": "build/installer.nsi"
     }
   }
 }

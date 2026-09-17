@@ -1,5 +1,5 @@
 import { useState, useContext } from "react";
-import { User } from "../../App.jsx"; // Maps natively to your shared context engine
+import { User } from "../../context/UserContext"; // Maps natively to your shared context engine
 import { useNavigate } from "react-router-dom";
 
 export default function ModifyView({onLoginSuccess}) {

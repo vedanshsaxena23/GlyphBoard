@@ -3,33 +3,48 @@ import { useNavigate } from "react-router-dom";
 export default function LogoutView() {
   const navigate = useNavigate();
 
-  const handleClearSession = async () => {
-    try {
-    // 2. Open an explicit deletion request targeting your custom database name
-    const DB_NAME = "GlyphBoardDB";
-    const deleteRequest = indexedDB.deleteDatabase(DB_NAME);
+ const handleResetProfile = async () => {
+    if (
+      !window.confirm(
+        "Reset profile on this device? This will erase your saved credentials and snippets."
+      )
+    ) {
+      return;
+    }
 
-    // 3. Wait for the browser database driver engine to confirm disk space purge
-      await new Promise((resolve, reject) => {
+    try {
+      // 1. Wipe OS SafeStorage Vault
+      if (window.electron?.vault) {
+        await window.electron.vault.save(null);
+      }
+
+      // 2. Wipe SQLite DB if available
+      if (window.electron?.ipcRenderer) {
+        await window.electron.ipcRenderer.invoke("sqlite-clear-clips").catch(() => {});
+      }
+
+      // 3. Wipe IndexedDB database
+      const DB_NAME = "GlyphBoardDB";
+      const deleteRequest = indexedDB.deleteDatabase(DB_NAME);
+
+      await new Promise((resolve) => {
         deleteRequest.onsuccess = () => resolve();
-        deleteRequest.onerror = (e) => reject(e.target.error);
+        deleteRequest.onerror = () => resolve(); // Proceed even if error
         deleteRequest.onblocked = () => {
-          // Warning fallback: If another tab/window has the DB open, it might block completion
-          console.warn("Database purge blocked by active background runtime instances.");
-          alert("Database purge blocked by active background runtime instances.");
-          resolve(); // Resolve anyway so the UI refresh isn't permanently stuck
-          return;
+          console.warn("Database purge blocked by active background instances.");
+          resolve();
         };
       });
+
+      // 4. Remove any residual session storage
+      localStorage.removeItem("gb_session_user");
     } catch (err) {
-      console.error("Failed to cleanly wipe persistent IndexedDB store log instances:", err);
-      alert(`Failed to cleanly wipe persistent IndexedDB store log instances: ${err}`);
-      return
+      console.error("Failed to complete profile reset:", err);
+    } finally {
+      // 5. Navigate to Home and perform a full application reload
+      window.location.hash = "#/";
+      window.location.reload();
     }
-    localStorage.removeItem("gb_session_user");
-    
-    navigate("/");
-    window.location.reload();
   };
 
   return (
@@ -56,7 +71,7 @@ export default function LogoutView() {
         {/* Binary Choice Control Layout Array */}
         <div className="flex flex-col w-full gap-2 mt-2">
           <button 
-            onClick={handleClearSession}
+            onClick={handleResetProfile}
             className="w-full py-2.5 bg-red-950/40 border border-red-800/40 text-red-400 text-xs font-semibold rounded-xl hover:bg-red-900/40 transition duration-200"
           >
             Confirm Termination
