@@ -14,7 +14,11 @@
     "preview": "vite preview",
     "electron": "electron main.js",
     "app:build": "vite build && electron-builder",
-    "electron:dev": "concurrently -k -s first \"vite\" \"wait-on tcp:5173 && cross-env VITE_DEV_SERVER_URL=http://localhost:5173 electron main.js\""
+    "electron:dev": "concurrently -k -s first \"vite\" \"wait-on tcp:5173 && cross-env VITE_DEV_SERVER_URL=http://localhost:5173 electron main.js\"",
+    "electron:build": "electron-builder",
+    "electron:build:win": "electron-builder --win nsis portable",
+    "electron:build:linux": "electron-builder --linux AppImage deb rpm",
+    "electron:build:mac": "electron-builder --mac dmg"
   },
   "dependencies": {
     "@fontsource/bitcount-prop-single": "^5.2.2",
@@ -72,6 +76,22 @@
         "nsis"
       ],
       "icon": "public/new-logo.ico"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb",
+        "rpm"
+      ],
+      "icon": "public/new-logo.png",
+      "category": "Utility",
+      "maintainer": "Vedansh Saxena <vedanshsaxena23@users.noreply.github.com>"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "icon": "public/new-logo.icns"
     },
     "portable": {
       "artifactName": "${productName}_Portable_${version}.${ext}"

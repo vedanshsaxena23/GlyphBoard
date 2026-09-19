@@ -30,6 +30,29 @@
 </div>
 <br/>
 
+
+```text
+  ___ ___ 
+ / __| _ )   v1.0.0 — “Aegis”
+| (_ | _ \   Hardware-Bound Cryptographic Vault
+ \___|___/   Status: Official Production Release
+  AEGIS      Zero Cloud • Hardware AES-256 • TOTP 2FA
+```
+
+> [!IMPORTANT]
+> **Production Release v1.0.0 ("Aegis") is live.** GlyphBoard now features full dual-database storage (IndexedDB + SQLite WAL), hardware-tied AES-256-GCM encryption, TOTP two-factor authentication, and multi-distro Linux packages (`.deb`, `.rpm`, `AppImage`).
+>
+> <details>
+> <summary><b>⚡ [CLASSIFIED] Code Name: "Aegis"</b></summary>
+>
+> In ancient myth, the **Aegis** (*αἰγίς*) was the impenetrable shield borne by Athena and Zeus—the ultimate ward against hostile forces. In this release, your clipboard ceases to be an unmonitored cache and becomes an impenetrable local bastion: cryptographic salts bound directly to machine hardware, explicit zero-fill memory wiping, and total local sovereignty. 🛡️✨
+> 
+>  > *(Also crafted over late-night coding sessions while obsessively binge-watching Lanterns on HBO 🟢💡)*
+</details>
+
+<br/>
+<br/>
+
 GlyphBoard is a clean, modern, high-performance offline code clipboard and snippet workspace manager tailored specifically for developers. Built on a fully decentralized architectural design, the application runs entirely locally on your hardware with zero external server dependencies, guaranteeing ironclad privacy and instantaneous data load workflows.
 
 ---
@@ -167,4 +190,4 @@ GlyphBoard is fundamentally built on the principle of absolute privacy, local da
 ---
 
 🔒 **"Your code. Your system. Zero compromises."**  
-Crafted with 💻 by **Vedansh Saxena**.
+Crafted with 💻 by **Vedansh Saxena** *(fueled by coffee and HBO's Lanterns)*.
