@@ -14,8 +14,8 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'index.html'),     
-        splash: resolve(__dirname, 'splash/index.html')
+        main: resolve(import.meta.dirname, 'index.html'),     
+        splash: resolve(import.meta.dirname, 'splash/index.html')
       }
     },
     outDir: 'dist'

@@ -1,8 +1,11 @@
 // glyphboard-client/main.js
-import { app, BrowserWindow, ipcMain, safeStorage } from 'electron';
+import { app, BrowserWindow, ipcMain, safeStorage, Menu } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import { initSqliteIpc } from './main-db.js';
+
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -68,7 +71,6 @@ function createSplash() {
 }
 
 function createMainWindow() {
-  // Preload script path: adjust if your preload is located elsewhere (e.g. utilities/preload.cjs)
   const preloadPath = path.join(__dirname, "src", "utilities", "preload.cjs");
 
   mainWin = new BrowserWindow({
@@ -79,7 +81,7 @@ function createMainWindow() {
     backgroundColor: '#09090b',
     show: false,
     webPreferences: {
-      preload: preloadPath, // 👈 REQUIRED: Injects window.electron into React
+      preload: preloadPath,
       nodeIntegration: false,
       contextIsolation: true,
     }
@@ -107,8 +109,12 @@ function createMainWindow() {
 // --- App Lifecycle ---
 
 app.whenReady().then(() => {
-  Menu.setApplicationMenu(null);
+  // Menu.setApplicationMenu(null);
   vaultPath = path.join(app.getPath('userData'), 'vault.bin');
+
+  // 2. Register SQLite IPC handlers before windows load
+  initSqliteIpc();
+
   createSplash();
   createMainWindow();
 });

@@ -13,13 +13,19 @@ let sqliteDriverInstance = null;
  */
 export async function setStorageEngine(mode, sqliteConfig = {}) {
   if (mode === "sqlite") {
-    if (!sqliteDriverInstance) {
-      const { createEncryptedSqliteDriver } = await import("./sqliteEncrypted.mjs");
-      sqliteDriverInstance = await createEncryptedSqliteDriver(sqliteConfig.password);
-    } else if (sqliteConfig.password) {
-      await sqliteDriverInstance.unlock(sqliteConfig.password);
+    try {
+      if (!sqliteDriverInstance) {
+        const { createEncryptedSqliteDriver } = await import("./sqliteEncrypted.mjs");
+        sqliteDriverInstance = await createEncryptedSqliteDriver(sqliteConfig.password);
+      } else if (sqliteConfig.password) {
+        await sqliteDriverInstance.unlock(sqliteConfig.password);
+      }
+      activeStorageMode = "sqlite";
+    } catch (err) {
+      // Keep state intact if password verification fails
+      sqliteDriverInstance = null;
+      throw err;
     }
-    activeStorageMode = "sqlite";
   } else {
     activeStorageMode = "indexeddb";
   }
@@ -40,14 +46,34 @@ export function getActiveEngineInfo() {
     engine: activeStorageMode,
     label: isSqlite ? "Encrypted SQLite (AES-GCM)" : "IndexedDB (Default)",
     isEncrypted: isSqlite,
-    isUnlocked: isSqlite ? Boolean(sqliteDriverInstance) : true,
+    // Inspect actual unlock state rather than just instance existence
+    isUnlocked: isSqlite ? Boolean(sqliteDriverInstance?.isUnlocked) : true,
   };
+}
+
+// Lock SQLite session by clearing the in-memory client and keys
+export function lockStorage() {
+  if (sqliteDriverInstance) {
+    sqliteDriverInstance.isUnlocked = false;
+    sqliteDriverInstance = null;
+  }
+}
+
+// Wipe the SQLite database files and clear active state
+export async function purgeSqliteDatabase() {
+  if (sqliteDriverInstance) {
+    await sqliteDriverInstance.purge();
+    sqliteDriverInstance = null;
+  } else {
+    // If locked/uninstantiated, purge directly via bridge
+    await window.electron.db.purge();
+  }
 }
 
 // Route CRUD dynamically to whichever backend is active
 function getDriver() {
   if (activeStorageMode === "sqlite") {
-    if (!sqliteDriverInstance) {
+    if (!sqliteDriverInstance || !sqliteDriverInstance.isUnlocked) {
       throw new Error(
         "SQLite engine selected but locked or uninitialized. Provide password to unlock."
       );
