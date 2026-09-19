@@ -1,5 +1,6 @@
+// src/Components/Settings View/ModifyView.jsx
 import { useState, useContext } from "react";
-import { User } from "../../context/UserContext"; // Maps natively to your shared context engine
+import { User } from "../../context/UserContext"; 
 import { useNavigate } from "react-router-dom";
 
 export default function ModifyView({onLoginSuccess}) {

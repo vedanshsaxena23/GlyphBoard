@@ -1,3 +1,4 @@
+// splash/components/App.jsx
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import "@fontsource/montserrat";  

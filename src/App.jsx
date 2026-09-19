@@ -1,4 +1,4 @@
-// glyphboard-client/src/App.jsx
+// src/App.jsx
 import React, { createContext, useState } from "react";
 import { HashRouter as Router, Routes, Route } from "react-router-dom";
 import { motion } from "motion/react";

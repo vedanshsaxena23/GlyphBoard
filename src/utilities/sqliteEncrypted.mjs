@@ -5,6 +5,16 @@ class SqliteIpcClient {
     this.isUnlocked = unlocked;
   }
 
+  _getBridge() {
+    const bridge = window.electron?.db;
+    if (!bridge) {
+      throw new Error(
+        "Electron SQLite IPC bridge is not available on window.electron.db. Verify preload.cjs is loaded."
+      );
+    }
+    return bridge;
+  }
+  
   async unlock(passphrase) {
     if (!passphrase) {
       throw new Error("A passphrase is required to unlock SQLite storage.");

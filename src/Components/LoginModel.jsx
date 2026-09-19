@@ -1,8 +1,10 @@
+// src/Components/LoginModel.jsx
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 import bcrypt from "bcryptjs";
 import * as OTPAuth from "otpauth";
 import QRCode from "qrcode";
+import { setStorageEngine as activateStorageEngine } from "../utilities/db.mjs";
 
 const saltRounds = 10;
 
@@ -42,7 +44,8 @@ export default function LoginModal({ onLoginSuccess }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [designation, setDesignation] = useState("");
-  const [storageEngine, setStorageEngine] = useState("sqlite");
+  // Renamed setter to avoid shadowing the db utility
+  const [storageEngine, setStorageEngineChoice] = useState("sqlite");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
@@ -56,7 +59,7 @@ export default function LoginModal({ onLoginSuccess }) {
   const [hashedPass, setHashedPass] = useState(null);
   const [error, setError] = useState("");
 
-  // 1. Check for existing profile in OS SafeStorage on launch
+  // 1. Check for existing profile in OS SafeStorage on launch (single effect)
   useEffect(() => {
     async function loadUserVault() {
       try {
@@ -65,6 +68,9 @@ export default function LoginModal({ onLoginSuccess }) {
           if (user) {
             setExistingUser(user);
             setMode("unlock");
+
+            const engine = user.storageEngine || "sqlite";
+            localStorage.setItem("glyph_storage_mode", engine);
             return;
           }
         }
@@ -139,7 +145,7 @@ export default function LoginModal({ onLoginSuccess }) {
     }
   };
 
-  // Step 2: Validate Initial 2FA and Save Profile into OS DPAPI Vault
+  // Step 2: Validate Initial 2FA, Save Profile, and Unlock Engine
   const handleEnrollVerify = async (e) => {
     e.preventDefault();
     setError("");
@@ -150,13 +156,21 @@ export default function LoginModal({ onLoginSuccess }) {
       return;
     }
 
+    if (storageEngine === "sqlite" && window.electron?.db?.purge) {
+      try {
+        await window.electron.db.purge();
+      } catch (purgeErr) {
+        console.warn("Pre-registration database wipe warning:", purgeErr);
+      }
+    }
+    
     const newProfile = {
       name: name.trim(),
       email: email.trim(),
       designation: designation.trim(),
       storageEngine,
-      password: hashedPass, // Saved bcrypt hash
-      totpSecret,           // Hardware encrypted by OS safeStorage
+      password: hashedPass, // Bcrypt hash
+      totpSecret,           // DPAPI protected
     };
 
     if (window.electron?.vault) {
@@ -170,10 +184,22 @@ export default function LoginModal({ onLoginSuccess }) {
       return;
     }
 
-    onLoginSuccess({ ...newProfile, rawPassword: password });
+    try {
+      if (storageEngine === "sqlite") {
+        await activateStorageEngine("sqlite", { password });
+      } else {
+        await activateStorageEngine("indexeddb");
+      }
+    } catch (dbErr) {
+      console.error("Storage unlock error during registration:", dbErr);
+      setError("Failed to initialize storage: " + dbErr.message);
+      return;
+    }
+
+    onLoginSuccess(newProfile);
   };
 
-  // Step 3: Returning User Unlock (Password + TOTP)
+  // Step 3: Returning User Unlock (Password + TOTP) -> UNLOCK DATABASE IN RAM
   const handleUnlockVerify = async (e) => {
     e.preventDefault();
     setError("");
@@ -195,52 +221,108 @@ export default function LoginModal({ onLoginSuccess }) {
       return;
     }
 
-    onLoginSuccess({ ...existingUser, rawPassword: unlockPassword });
+    try {
+      const engine = existingUser.storageEngine || "sqlite";
+      if (engine === "sqlite") {
+        await activateStorageEngine("sqlite", { password: unlockPassword });
+      } else {
+        await activateStorageEngine("indexeddb");
+      }
+    } catch (dbErr) {
+      console.error("Storage unlock error:", dbErr);
+      setError("Database unlock error: " + dbErr.message);
+      return;
+    }
+
+    onLoginSuccess(existingUser);
   };
 
-  // Profile reset: clears hardware vault file
- const handleResetProfile = async () => {
+
+  // Profile reset: clears hardware vault file and purges physical database & keys
+  const handleResetProfile = async (e) => {
+    if (e?.preventDefault) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
     if (
       !window.confirm(
-        "Reset profile on this device? This will erase your saved credentials and snippets."
+        "Reset profile on this device? This will erase your saved credentials, local database, and snippets."
       )
     ) {
       return;
     }
 
+    console.log("================ [RESET STARTED] ================");
+
+    // Step 1: Wipe session keys
     try {
-      // 1. Wipe OS SafeStorage Vault
-      if (window.electron?.vault) {
-        await window.electron.vault.save(null);
-      }
+      lockStorage();
+      console.log("Step 1/5: lockStorage() executed.");
+    } catch (err) {
+      console.error("Step 1/5: lockStorage() error:", err?.stack || err?.message || err);
+    }
 
-      // 2. Wipe SQLite DB if available
-      if (window.electron?.ipcRenderer) {
-        await window.electron.ipcRenderer.invoke("sqlite-clear-clips").catch(() => {});
+    // Step 2: Wipe SQLite
+    try {
+      if (window.electron?.db?.purge) {
+        const purgeRes = await window.electron.db.purge();
+        console.log("Step 2/5: SQLite purged successfully. Result:", purgeRes);
+      } else {
+        console.warn("Step 2/5: window.electron.db.purge not defined.");
       }
+    } catch (err) {
+      console.error("Step 2/5: SQLite purge error:", err?.stack || err?.message || err);
+    }
 
-      // 3. Wipe IndexedDB database
+    // Step 3: Wipe OS Vault
+    try {
+      if (window.electron?.vault?.save) {
+        const vaultRes = await window.electron.vault.save(null);
+        console.log("Step 3/5: Vault cleared. Result:", vaultRes);
+      } else {
+        console.warn("Step 3/5: window.electron.vault.save not defined.");
+      }
+    } catch (err) {
+      console.error("Step 3/5: Vault save error:", err?.stack || err?.message || err);
+    }
+
+    // Step 4: Wipe IndexedDB
+    try {
       const DB_NAME = "GlyphBoardDB";
       const deleteRequest = indexedDB.deleteDatabase(DB_NAME);
 
       await new Promise((resolve) => {
-        deleteRequest.onsuccess = () => resolve();
-        deleteRequest.onerror = () => resolve(); // Proceed even if error
+        deleteRequest.onsuccess = () => {
+          console.log("Step 4/5: IndexedDB deleted successfully.");
+          resolve();
+        };
+        deleteRequest.onerror = (ev) => {
+          console.error("Step 4/5: IndexedDB delete failed:", ev?.target?.error?.message || "Unknown error");
+          resolve();
+        };
         deleteRequest.onblocked = () => {
-          console.warn("Database purge blocked by active background instances.");
+          console.warn("Step 4/5: IndexedDB deletion blocked by an open connection.");
           resolve();
         };
       });
-
-      // 4. Remove any residual session storage
-      localStorage.removeItem("gb_session_user");
     } catch (err) {
-      console.error("Failed to complete profile reset:", err);
-    } finally {
-      // 5. Navigate to Home and perform a full application reload
-      window.location.hash = "#/";
-      window.location.reload();
+      console.error("Step 4/5: IndexedDB wipe exception:", err?.stack || err?.message || err);
     }
+
+    // Step 5: Wipe DOM Storage
+    try {
+      localStorage.removeItem("gb_session_user");
+      localStorage.removeItem("glyph_storage_mode");
+      console.log("Step 5/5: localStorage cleared.");
+    } catch (err) {
+      console.error("Step 5/5: localStorage clear error:", err?.message || err);
+    }
+
+    console.log("================ [RESET COMPLETE - RELOADING] ================");
+
+    window.location.hash = "#/";
+    window.location.reload();
   };
 
   if (loadingVault) {
@@ -417,7 +499,7 @@ export default function LoginModal({ onLoginSuccess }) {
                       <button
                         type="button"
                         onClick={() => {
-                          setStorageEngine("indexeddb");
+                          setStorageEngineChoice("indexeddb");
                           setError("");
                         }}
                         className={`p-3 rounded-xl border text-left flex flex-col justify-between transition-all ${
@@ -436,7 +518,7 @@ export default function LoginModal({ onLoginSuccess }) {
                       <button
                         type="button"
                         onClick={() => {
-                          setStorageEngine("sqlite");
+                          setStorageEngineChoice("sqlite");
                           setError("");
                         }}
                         className={`p-3 rounded-xl border text-left flex flex-col justify-between transition-all ${

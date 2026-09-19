@@ -1,105 +1,103 @@
-// db.mjs
+// src/utilities/db.mjs
 import * as idbDriver from "./indexeddb.js";
 
-// Storage mode: "indexeddb" | "sqlite"
-let activeStorageMode = localStorage.getItem("glyph_storage_mode") || "indexeddb";
-let sqliteDriverInstance = null;
+let activeStorageMode = localStorage.getItem("glyph_storage_mode") || "sqlite";
 
-/**
- * Switch storage engine and optionally unlock/instantiate SQLite.
- * @param {"indexeddb" | "sqlite"} mode
- * @param {Object} [sqliteConfig]
- * @param {string} [sqliteConfig.password]
- */
+// 💡 1. Read existing instance from global window memory if already unlocked
+let sqliteDriverInstance = typeof window !== "undefined" ? window.__gb_sqlite_driver__ || null : null;
+
 export async function setStorageEngine(mode, sqliteConfig = {}) {
   if (mode === "sqlite") {
     try {
-      if (!sqliteDriverInstance) {
-        const { createEncryptedSqliteDriver } = await import("./sqliteEncrypted.mjs");
-        sqliteDriverInstance = await createEncryptedSqliteDriver(sqliteConfig.password);
-      } else if (sqliteConfig.password) {
-        await sqliteDriverInstance.unlock(sqliteConfig.password);
+      // If already unlocked and no new password provided, keep it active
+      if (sqliteDriverInstance?.isUnlocked && !sqliteConfig.password) {
+        activeStorageMode = "sqlite";
+        localStorage.setItem("glyph_storage_mode", "sqlite");
+        return;
       }
+
+      const { createEncryptedSqliteDriver } = await import("./sqliteEncrypted.mjs");
+      sqliteDriverInstance = await createEncryptedSqliteDriver(sqliteConfig.password);
+
+      // 💡 2. Pin instance to global window so it persists across all re-renders & HMR
+      if (typeof window !== "undefined") {
+        window.__gb_sqlite_driver__ = sqliteDriverInstance;
+      }
+
       activeStorageMode = "sqlite";
+      localStorage.setItem("glyph_storage_mode", "sqlite");
     } catch (err) {
-      // Keep state intact if password verification fails
       sqliteDriverInstance = null;
+      if (typeof window !== "undefined") window.__gb_sqlite_driver__ = null;
       throw err;
     }
   } else {
+    // Switching to IndexedDB
+    if (sqliteDriverInstance) {
+      sqliteDriverInstance.isUnlocked = false;
+      sqliteDriverInstance = null;
+    }
+    if (typeof window !== "undefined") window.__gb_sqlite_driver__ = null;
     activeStorageMode = "indexeddb";
-  }
-
-  localStorage.setItem("glyph_storage_mode", activeStorageMode);
-}
-
-// Quick string identifier getter ("indexeddb" | "sqlite")
-export function getActiveEngine() {
-  return activeStorageMode;
-}
-
-// Inspection utility for Settings UI
-export function getActiveEngineInfo() {
-  const isSqlite = activeStorageMode === "sqlite";
-
-  return {
-    engine: activeStorageMode,
-    label: isSqlite ? "Encrypted SQLite (AES-GCM)" : "IndexedDB (Default)",
-    isEncrypted: isSqlite,
-    // Inspect actual unlock state rather than just instance existence
-    isUnlocked: isSqlite ? Boolean(sqliteDriverInstance?.isUnlocked) : true,
-  };
-}
-
-// Lock SQLite session by clearing the in-memory client and keys
-export function lockStorage() {
-  if (sqliteDriverInstance) {
-    sqliteDriverInstance.isUnlocked = false;
-    sqliteDriverInstance = null;
+    localStorage.setItem("glyph_storage_mode", "indexeddb");
   }
 }
 
-// Wipe the SQLite database files and clear active state
-export async function purgeSqliteDatabase() {
-  if (sqliteDriverInstance) {
-    await sqliteDriverInstance.purge();
-    sqliteDriverInstance = null;
-  } else {
-    // If locked/uninstantiated, purge directly via bridge
-    await window.electron.db.purge();
-  }
-}
-
-// Route CRUD dynamically to whichever backend is active
+// 💡 3. Always pull latest reference from window in getDriver
 function getDriver() {
   if (activeStorageMode === "sqlite") {
-    if (!sqliteDriverInstance || !sqliteDriverInstance.isUnlocked) {
-      throw new Error(
-        "SQLite engine selected but locked or uninitialized. Provide password to unlock."
-      );
+    const currentInstance = sqliteDriverInstance || (typeof window !== "undefined" ? window.__gb_sqlite_driver__ : null);
+    
+    if (!currentInstance || !currentInstance.isUnlocked) {
+      throw new Error("SQLite engine selected but locked or uninitialized. Provide password to unlock.");
     }
-    return sqliteDriverInstance;
+    return currentInstance;
   }
   return idbDriver;
 }
 
-// Unified CRUD exports
-export async function addClip(...args) {
-  return getDriver().addClip(...args);
+export function lockStorage() {
+  const currentInstance = sqliteDriverInstance || (typeof window !== "undefined" ? window.__gb_sqlite_driver__ : null);
+  if (currentInstance) {
+    currentInstance.isUnlocked = false;
+  }
+  sqliteDriverInstance = null;
+  if (typeof window !== "undefined") {
+    window.__gb_sqlite_driver__ = null;
+  }
+
+  if (idbDriver.closeDB) {
+    idbDriver.closeDB();
+  }
 }
 
-export async function getAllClips(...args) {
-  return getDriver().getAllClips(...args);
+export function getActiveEngineInfo() {
+  const currentInstance = sqliteDriverInstance || (typeof window !== "undefined" ? window.__gb_sqlite_driver__ : null);
+  const isSqlite = activeStorageMode === "sqlite";
+  return {
+    engine: activeStorageMode,
+    label: isSqlite ? "Encrypted SQLite (AES-GCM)" : "IndexedDB (Default)",
+    isEncrypted: isSqlite,
+    isUnlocked: isSqlite ? Boolean(currentInstance?.isUnlocked) : true,
+  };
 }
 
-export async function updateClip(...args) {
-  return getDriver().updateClip(...args);
+export async function addClip(clip) {
+  return getDriver().addClip(clip);
 }
 
-export async function deleteClip(...args) {
-  return getDriver().deleteClip(...args);
+export async function getAllClips() {
+  return getDriver().getAllClips();
 }
 
-export async function clearAllClips(...args) {
-  return getDriver().clearAllClips(...args);
+export async function updateClip(clip) {
+  return getDriver().updateClip(clip);
+}
+
+export async function deleteClip(id) {
+  return getDriver().deleteClip(id);
+}
+
+export async function clearAllClips() {
+  return getDriver().clearAllClips();
 }

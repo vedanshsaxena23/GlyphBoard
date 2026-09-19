@@ -1,3 +1,4 @@
+// src/Components/MainView/NewSnippetView.jsx
 import { useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { addClip } from "../../utilities/db.mjs"; 
@@ -14,7 +15,8 @@ export default function NewSnippetView() {
     { value: "javascript", label: "JavaScript (JS)" },
     { value: "typescript", label: "TypeScript (TS)" },
     { value: "python", label: "Python (PY)" },
-    { value: "c", label: "C++" },
+    { value: "c", label: "C" },
+    { value: "cpp", label: "C++" },
     { value: "csharp", label: "C# (C#)" },
     { value: "html", label: "HTML (HTM)" },
     { value: "css", label: "CSS" },
@@ -30,7 +32,9 @@ export default function NewSnippetView() {
   ];
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e?.preventDefault) {
+      e.preventDefault(); 
+    }
     if (!title.trim()) return;
 
     try {
@@ -39,27 +43,22 @@ export default function NewSnippetView() {
       if (language === "html") starterCode = "\n<!DOCTYPE html>\n<html>\n</html>";
       if (language === "json") starterCode = "{\n  \"key\": \"value\"\n}";
 
-      const newId = await addClip(
-        starterCode,
-        language,
-        title.trim()
-      );
-
-      if (description.trim()) {
-        const { openDB } = await import("../../utilities/db.mjs");
-        const db = await openDB();
-        const transaction = db.transaction("clips", "readwrite");
-        const store = transaction.objectStore("clips");
-        
-        const fetchReq = store.get(newId);
-        fetchReq.onsuccess = () => {
-          const data = fetchReq.result;
-          data.description = description.trim();
-          store.put(data);
-        };
+      const clipId = crypto.randomUUID();
+      const timestamp = Date.now()
+      
+      const newClip = {
+        id: clipId,
+        title: title.trim(),
+        language: language,
+        content: starterCode,
+        description: description.trim() || "",
+        createdAt: timestamp,
+        updatedAt: timestamp,
       }
 
-      await refreshClips(newId);
+      await addClip(newClip);
+
+      await refreshClips(clipId);
       navigate("/");
     } catch (err) {
       console.error("Critical session state compilation exception:", err);

@@ -1,3 +1,4 @@
+// src/Components/MainView/Snippet.jsx
 export default function SnippetCard({ snippet, isActive, onDelete }) {
   const langConfig = {
     javascript: { label: "JS", color: "text-amber-400 bg-amber-500/10 border-amber-500/20" },
@@ -53,7 +54,13 @@ export default function SnippetCard({ snippet, isActive, onDelete }) {
 
       {/* DESCRIPTION SECTION: Simple Text Snippet */}
       <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed">
-        {snippet.description || snippet.content || "No description provided for this saved saved board entry."}
+        {typeof snippet.description === "string" && snippet.description.trim()
+          ? snippet.description
+          : typeof snippet.content === "string"
+          ? snippet.content
+          : typeof snippet.content === "object" && snippet.content?.content
+          ? snippet.content.content
+          : "No description provided for this saved board entry."}
       </p>
 
       {/* ATTACHMENT SECTION: Dynamic Image or File Wrapper */}

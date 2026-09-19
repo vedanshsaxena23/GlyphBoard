@@ -1,3 +1,4 @@
+// src/Components/MainView/FilterAccordion.jsx
 export default function FilterAccordion({ searchQuery, setSearchQuery }) {
   return (
     <div className="w-full flex flex-col gap-2">

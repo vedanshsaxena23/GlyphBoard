@@ -1,8 +1,15 @@
+// src/utilities/indexeddb.js
 const DB_NAME = "GlyphBoardDB";
 const DB_VERSION = 1;
 const STORE_NAME = "clips";
 
+let cachedDB = null;
+
 export function openDB() {
+  if (cachedDB) {
+    return Promise.resolve(cachedDB);
+  }
+
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
 
@@ -13,26 +20,53 @@ export function openDB() {
       }
     };
 
-    request.onsuccess = (e) => resolve(e.target.result);
+    request.onsuccess = (e) => {
+      cachedDB = e.target.result;
+      cachedDB.onclose = () => { cachedDB = null; };
+      cachedDB.onversionchange = () => {
+        cachedDB.close();
+        cachedDB = null;
+      };
+      resolve(cachedDB);
+    };
+
     request.onerror = (e) => reject(e.target.error);
   });
 }
 
-// Helper to safely close DB connections
-function closeDB(db) {
-  if (db) db.close();
+export function closeDB() {
+  if (cachedDB) {
+    cachedDB.close();
+    cachedDB = null;
+  }
 }
 
 // CREATE
-export async function addClip(content = "", language = "plaintext", title = "Untitled Snippet") {
+export async function addClip(clipOrContent = "", language = "plaintext", title = "Untitled Snippet") {
+  const record =
+    typeof clipOrContent === "object" && clipOrContent !== null
+      ? {
+          title: clipOrContent.title || "Untitled Snippet",
+          language: clipOrContent.language || "plaintext",
+          content: clipOrContent.content || "",
+          timestamp: clipOrContent.timestamp || Date.now(),
+        }
+      : {
+          title,
+          language,
+          content: clipOrContent,
+          timestamp: Date.now(),
+        };
+
   const db = await openDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, "readwrite");
     const store = tx.objectStore(STORE_NAME);
-    const req = store.add({ title, language, content, timestamp: Date.now() });
+    const req = store.add(record);
 
-    tx.oncomplete = () => { closeDB(db); resolve(req.result); };
-    tx.onerror = () => { closeDB(db); reject(tx.error); };
+    tx.oncomplete = () => resolve(req.result);
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error);
   });
 }
 
@@ -45,10 +79,11 @@ export async function getAllClips() {
     const req = store.getAll();
 
     tx.oncomplete = () => {
-      closeDB(db);
-      resolve(req.result.sort((a, b) => b.timestamp - a.timestamp));
+      const results = req.result || [];
+      resolve(results.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)));
     };
-    tx.onerror = () => { closeDB(db); reject(tx.error); };
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error);
   });
 }
 
@@ -58,11 +93,18 @@ export async function updateClip(updatedRecord) {
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, "readwrite");
     const store = tx.objectStore(STORE_NAME);
-    updatedRecord.id = Number(updatedRecord.id);
-    const req = store.put(updatedRecord);
 
-    tx.oncomplete = () => { closeDB(db); resolve(req.result); };
-    tx.onerror = () => { closeDB(db); reject(tx.error); };
+    const record = {
+      ...updatedRecord,
+      id: Number(updatedRecord.id),
+      timestamp: updatedRecord.timestamp || Date.now(),
+    };
+
+    const req = store.put(record);
+
+    tx.oncomplete = () => resolve(req.result);
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error);
   });
 }
 
@@ -72,11 +114,12 @@ export async function deleteClip(id) {
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, "readwrite");
     const store = tx.objectStore(STORE_NAME);
-    const targetId = typeof id === "object" ? id.id : Number(id);
-    const req = store.delete(targetId);
+    const targetId = typeof id === "object" && id !== null ? Number(id.id) : Number(id);
+    store.delete(targetId);
 
-    tx.oncomplete = () => { closeDB(db); resolve(true); };
-    tx.onerror = () => { closeDB(db); reject(tx.error); };
+    tx.oncomplete = () => resolve(true);
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error);
   });
 }
 
@@ -86,9 +129,10 @@ export async function clearAllClips() {
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, "readwrite");
     const store = tx.objectStore(STORE_NAME);
-    const req = store.clear();
+    store.clear();
 
-    tx.oncomplete = () => { closeDB(db); resolve(true); };
-    tx.onerror = () => { closeDB(db); reject(tx.error); };
+    tx.oncomplete = () => resolve(true);
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error);
   });
 }

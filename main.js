@@ -1,4 +1,4 @@
-// glyphboard-client/main.js
+// main.js
 import { app, BrowserWindow, ipcMain, safeStorage, Menu } from 'electron';
 import path from 'path';
 import fs from 'fs';

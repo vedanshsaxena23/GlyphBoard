@@ -1,3 +1,4 @@
+// src/Components/Settings View/SettingsView.jsx
 import React, { useContext } from "react";
 import { User } from "../../context/UserContext";
 

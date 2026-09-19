@@ -1,3 +1,4 @@
+// main-db.js
 import Database from "better-sqlite3";
 import crypto from "crypto";
 import path from "path";
@@ -80,10 +81,12 @@ export function initSqliteIpc() {
       db = new Database(dbPath);
       db.pragma("journal_mode = WAL");
 
+      // 1. Base table creation
       db.exec(`
         CREATE TABLE IF NOT EXISTS clips (
           id TEXT PRIMARY KEY,
           title TEXT,
+          description TEXT,
           language TEXT,
           content TEXT,
           iv TEXT,
@@ -93,7 +96,14 @@ export function initSqliteIpc() {
         )
       `);
 
-      // Canary verification: ensures passphrase is correct for existing databases
+      // 2. Migration safety: check if description column exists for pre-existing tables
+      const columns = db.prepare("PRAGMA table_info(clips)").all();
+      const hasDescription = columns.some((col) => col.name === "description");
+      if (!hasDescription) {
+        db.exec("ALTER TABLE clips ADD COLUMN description TEXT DEFAULT ''");
+      }
+
+      // 3. Canary verification: ensures passphrase is correct for existing databases
       const canaryRow = db.prepare("SELECT * FROM clips WHERE id = ?").get(CANARY_RECORD_ID);
 
       if (canaryRow) {
@@ -108,10 +118,20 @@ export function initSqliteIpc() {
         // First run: write the verification canary
         const { ciphertext, iv, tag } = encrypt(CANARY_PLAINTEXT);
         const stmt = db.prepare(`
-          INSERT INTO clips (id, title, language, content, iv, tag, created_at, updated_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          INSERT INTO clips (id, title, description, language, content, iv, tag, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `);
-        stmt.run(CANARY_RECORD_ID, "__SYSTEM__", "text", ciphertext, iv, tag, Date.now(), Date.now());
+        stmt.run(
+          CANARY_RECORD_ID,
+          "__SYSTEM__",
+          "",
+          "text",
+          ciphertext,
+          iv,
+          tag,
+          Date.now(),
+          Date.now()
+        );
       }
 
       return { success: true };
@@ -130,12 +150,13 @@ export function initSqliteIpc() {
     if (!db || !derivedKey) throw new Error("Database not initialized or unlocked");
     const { ciphertext, iv, tag } = encrypt(clip.content || "");
     const stmt = db.prepare(`
-      INSERT INTO clips (id, title, language, content, iv, tag, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO clips (id, title, description, language, content, iv, tag, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     stmt.run(
       clip.id,
       clip.title || "",
+      clip.description || "",
       clip.language || "text",
       ciphertext,
       iv,
@@ -143,7 +164,9 @@ export function initSqliteIpc() {
       clip.createdAt || Date.now(),
       clip.updatedAt || Date.now()
     );
-    return clip;
+
+    // Return the string ID directly so callers don't accidentally render raw objects
+    return clip.id;
   });
 
   ipcMain.handle("sqlite-get-all-clips", async () => {
@@ -156,6 +179,7 @@ export function initSqliteIpc() {
     return rows.map((row) => ({
       id: row.id,
       title: row.title,
+      description: row.description || "",
       language: row.language,
       content: decrypt(row.content, row.iv, row.tag),
       createdAt: row.created_at,
@@ -168,11 +192,12 @@ export function initSqliteIpc() {
     const { ciphertext, iv, tag } = encrypt(clip.content || "");
     const stmt = db.prepare(`
       UPDATE clips
-      SET title = ?, language = ?, content = ?, iv = ?, tag = ?, updated_at = ?
+      SET title = ?, description = ?, language = ?, content = ?, iv = ?, tag = ?, updated_at = ?
       WHERE id = ? AND id != ?
     `);
     stmt.run(
       clip.title || "",
+      clip.description || "",
       clip.language || "text",
       ciphertext,
       iv,
@@ -181,7 +206,7 @@ export function initSqliteIpc() {
       clip.id,
       CANARY_RECORD_ID
     );
-    return clip;
+    return clip.id;
   });
 
   ipcMain.handle("sqlite-delete-clip", async (event, id) => {
@@ -206,7 +231,6 @@ export function initSqliteIpc() {
         db = null;
       }
       derivedKey = null;
-
       const userData = app.getPath("userData");
       const filesToWipe = [
         "glyphboard.db",

@@ -1,4 +1,5 @@
 // test-vault.cjs
+// Diagnostic utility for testing OS SafeStorage encryption. Not used in production.
 const { app, safeStorage } = require("electron");
 
 app.whenReady().then(() => {
