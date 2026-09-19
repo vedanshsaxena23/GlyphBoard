@@ -63,7 +63,8 @@
       "dist/**/*",
       "main.js",
       "package.json",
-      "main-db.js"
+      "main-db.js",
+      "src/utilities/preload.cjs"
     ],
     "win": {
       "target": [
@@ -81,8 +82,7 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "GlyphBoard Aegis",
-      "artifactName": "${productName}_Setup_${version}.${ext}",
-      "include": "build/installer.nsi"
+      "artifactName": "${productName}_Setup_${version}.${ext}"
     }
   }
 }
