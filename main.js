@@ -109,7 +109,7 @@ function createMainWindow() {
 // --- App Lifecycle ---
 
 app.whenReady().then(() => {
-  // Menu.setApplicationMenu(null);
+  Menu.setApplicationMenu(null);
   vaultPath = path.join(app.getPath('userData'), 'vault.bin');
 
   // 2. Register SQLite IPC handlers before windows load

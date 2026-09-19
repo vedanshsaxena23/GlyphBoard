@@ -53,12 +53,17 @@ GlyphBoard is a clean, modern, high-performance offline code clipboard and snipp
 ---
 ## ✨ Key Features
 
-* **Fully Offline Setup:** Zero backend infrastructure tracks or endpoints. The codebase resolves internal logic entirely out of the local client wrapper.
-* **Embedded Monaco Code Editor:** Implements the core editor framework fueling VS Code natively—bringing high-quality syntax highlighting, code completions, and auto-formatting straight to your desktop layout.
-* **Persistent Local Vault:** Uses Chromium's native IndexedDB framework to execute robust asynchronous data tracking across snippet spaces without performance lag.
-* **Auto-Save Architecture:** In-flight code modifications debouncing loop records updates seamlessly directly to the database layer on every input stroke.
-* **Zero-Complication Copy Pipelines:** Modern hardware clipboard synchronization engine pairs with intuitive temporary status notifications when tracking blocks.
-* **Flexible Deployment Options:** Available as either a lightweight, standalone portable binary or a simple installer for seamless setup across standard environment protocols.
+* **Hardware-Bound AES-256-GCM Encryption:** Secures snippets at rest using PBKDF2 key derivation paired with hardware-bound, isolated salts.
+* **Dual-Engine Pluggable Storage:** Seamlessly toggle between client-side IndexedDB and an encrypted SQLite backend with persistent configuration tracking.
+* **Multi-Factor Authentication (Password & TOTP):** Enforces local access control through strong passphrase hashing and standard Time-based One-Time Password (TOTP) two-factor verification with integrated QR code provisioning.
+* **SQLite WAL & Schema Safety:** High-throughput SQLite operations running in Write-Ahead Logging (WAL) mode, featuring safe schema migrations, chronological sorting, and clean checkpointing.
+* **OS-Level Credential Protection:** Direct integration with OS Credential Manager (DPAPI SafeStorage) ensures encryption secrets and configuration tokens are never exposed on raw disk storage.
+* **Zero-Knowledge Canary Sentinel:** Verifies local database integrity and validates passphrases without ever exposing raw cryptographic material.
+* **In-Memory Guard & Auto-Locking:** Automated workspace locking during idle states paired with zero-residue, explicit memory key wiping routines.
+* **Embedded Monaco Code Editor:** Integrates the native VS Code editor engine straight to your desktop layout for syntax highlighting, auto-formatting, and intelligent completions[cite: 1].
+* **Atomic Lifecycle Resets:** Safe database maintenance supporting clean atomic snippet purging and safe, non-destructive profile resets.
+* **Modernized UI/UX:** Refined dark-mode styling, responsive layouts, and clean visual themes designed for distraction-free coding workflows.
+* **100% Offline & Telemetry-Free:** Zero network pings, zero tracking endpoints, and zero cloud dependencies. Your data lives exclusively on your disk.
 
 ---
 
@@ -68,23 +73,27 @@ The project operates under a unified layout framework context, discarding root w
 
 ```text
 GLYPHBOARD/
-├── dist/                  # Vite production asset compilation output
-├── node_modules/          # Local workspace runtime package dependencies
-├── public/                # Static application assets (Logo images, etc.)
-├── release/               # Standalone distributed binary destination directory
-├── splash/                # Splash screen
-│   ├── components/        # Core UI of splash screen
+├── assets/                # Visual assets (demo GIFs, UI previews)
+├── dist/                  # Vite production compilation output
+├── node_modules/          # Workspace runtime package dependencies
+├── public/                # Static application assets (logos, icons)
+├── release/               # Packaged production installer outputs
+├── splash/                # Splash screen viewport & loading states
+│   └── components/        # Splash screen UI primitives
 ├── src/                   # Active React functional components & views
-│   ├── assets/            # CSS layouts and custom web typography stylesheets
-│   ├── Components/        # Core UI views (Sidebar, MainView, Settings panels)
-│   └── utilities/         # Shared configuration stacks (IndexedDB manager)
-├── .gitignore             # Vetted index mapping ignore configurations
-├── eslint.config.js       # Code sanity check execution instructions
-├── index.html             # Application mounting viewport framework
-├── main.js                # Core Electron background setup entry script
-├── package.json           # Application packaging rules, tasks, and packages
-├── postcss.config.mjs     # PostCSS styling layout transformations pipeline
-└── vite.config.js         # Client compilation environment path configurations
+│   ├── assets/            # CSS layouts, Tailwind styles, typography
+│   ├── Components/        # Core UI views (Sidebar, MainView, Modals)
+│   └── utilities/         # Storage managers (IndexedDB & SQLite handlers)
+├── .gitignore             # Git ignore configurations
+├── eslint.config.js       # Code quality and sanity checking
+├── index.html             # Application mounting DOM tree
+├── LICENSE.md             # GPL-3.0 legal terms
+├── main.js                # Core Electron background entry script
+├── main-db.js             # Electron SQLite backend & IPC layer
+├── package.json           # Application packaging rules, scripts, & dependencies
+├── postcss.config.mjs     # PostCSS styling transformation pipeline
+├── README.md              # Project documentation
+└── vite.config.js         # Client compilation configuration
 
 ```
 
@@ -134,7 +143,7 @@ npm run app:build
 
 ```
 
-3. Fire up **`GlyphBoard_Portable_1.0.0.exe`** right off your hard drive. It will generate its storage footprints dynamically and run smoothly with zero network tracking hoops!
+3. Fire up **`GlyphBoard Aegis_Setup_1.0.0.exe`** right off your hard drive. It will generate its storage footprints dynamically and run smoothly with zero network tracking hoops!
 
 ---
 ## 🛡️ License & Sovereign Rights

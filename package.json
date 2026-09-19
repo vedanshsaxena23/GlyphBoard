@@ -4,7 +4,7 @@
   "author": "Vedansh Saxena",
   "license": "GPL-3.0-or-only",
   "description": "A high-performance offline code clipboard and snippet workspace manager for developers.",
-  "version": "1.0.2-beta",
+  "version": "1.0.0",
   "type": "module",
   "main": "main.js",
   "scripts": {
@@ -23,7 +23,6 @@
     "@tailwindcss/postcss": "^4.3.2",
     "axios": "^1.18.1",
     "bcryptjs": "^3.0.3",
-    "better-sqlite3": "^13.0.3",
     "monaco-editor": "^0.56.0",
     "motion": "^12.42.2",
     "otpauth": "^9.5.2",
@@ -32,6 +31,7 @@
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-router-dom": "^7.18.1",
+    "sql.js": "^1.14.2",
     "tailwindcss": "^4.3.2"
   },
   "devDependencies": {
@@ -55,14 +55,15 @@
   },
   "build": {
     "appId": "com.vedansh.glyphboard",
-    "productName": "GlyphBoard",
+    "productName": "GlyphBoard Aegis",
     "directories": {
       "output": "release"
     },
     "files": [
       "dist/**/*",
       "main.js",
-      "package.json"
+      "package.json",
+      "main-db.js"
     ],
     "win": {
       "target": [
@@ -79,7 +80,7 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "GlyphBoard",
+      "shortcutName": "GlyphBoard Aegis",
       "artifactName": "${productName}_Setup_${version}.${ext}",
       "include": "build/installer.nsi"
     }
